@@ -20,10 +20,13 @@ public class InventoryConsumer {
 
         event.getProductIds().forEach(pid -> {
             int updated = inventoryRepository.reduceStock(pid, 1);
+
             if (updated > 0) {
                 log.info("SUCCESS: Stock for Product {} reduced by 1.", pid);
             } else {
-                log.error("FAILURE: Could not reduce stock for Product {}. (Out of stock or ID missing)", pid);
+                // CRITICAL: Throw an exception to trigger the DLT logic!
+                log.error("FAILURE: Product {} not found. Triggering DLT...", pid);
+                throw new RuntimeException("Product ID " + pid + " not found in Inventory DB");
             }
         });
     }
