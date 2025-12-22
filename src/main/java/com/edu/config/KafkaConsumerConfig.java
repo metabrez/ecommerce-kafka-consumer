@@ -1,6 +1,7 @@
 package com.edu.config;
 
 import com.edu.model.OrderEvent;
+import org.apache.kafka.common.TopicPartition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
@@ -26,10 +27,21 @@ public class KafkaConsumerConfig {
         FixedBackOff backOff = new FixedBackOff(2000L, 3);
 
         // 2. Define the Dead Letter Publishing Recoverer
-        DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(template);
+       // DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(template);
+
+        // In KafkaConsumerConfig.java
+        // FIX: Tell the recoverer exactly which topic name to use (ORDER_CREATED.DLT)
+        DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(template,
+                (r, e) -> new TopicPartition("ORDER_CREATED.DLT", r.partition()));
 
         // 3. Set the Error Handler
         DefaultErrorHandler errorHandler = new DefaultErrorHandler(recoverer, backOff);
+
+        // ADD THIS: Log each retry attempt to see what's happening in your console
+        errorHandler.setRetryListeners((record, ex, deliveryAttempt) -> {
+            System.out.println("--- Retry Attempt #" + deliveryAttempt + " for Order Event ---");
+        });
+
         factory.setCommonErrorHandler(errorHandler);
 
         return factory;
