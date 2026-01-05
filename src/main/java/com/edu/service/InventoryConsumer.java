@@ -19,25 +19,9 @@ public class InventoryConsumer {
     @Autowired
     private KafkaTemplate<String, Object> kafkaTemplate;
 
-   /* @KafkaListener(topics = "ORDER_CREATED", groupId = "inventory-group")
+    @KafkaListener(topics = "ORDER_CREATED", groupId = "inventory-group-v2")
     public void handleOrderEvent(OrderEvent event) {
         log.info("-> Kafka Message Received: Processing Order #{}", event.getOrderId());
-
-        event.getProductIds().forEach(pid -> {
-            int updated = inventoryRepository.reduceStock(pid, 1);
-
-            if (updated > 0) {
-                log.info("SUCCESS: Stock for Product {} reduced by 1.", pid);
-            } else {
-                // CRITICAL: Throw an exception to trigger the DLT logic!
-                log.error("FAILURE: Product {} not found. Triggering DLT...", pid);
-                throw new RuntimeException("Product ID " + pid + " not found in Inventory DB");
-            }
-        });
-    }*/
-
-    @KafkaListener(topics = "ORDER_CREATED", groupId = "inventory-group")
-    public void handleOrderEvent(OrderEvent event) {
         boolean allUpdated = true;
 
         for (Long pid : event.getProductIds()) {

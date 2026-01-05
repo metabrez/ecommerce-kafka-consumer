@@ -11,16 +11,20 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class DeadLetterService {
 
-    // CHANGE: Use a unique groupId to separate this from the main retry logic
-    @KafkaListener(topics = "ORDER_CREATED.DLT", groupId = "dlt-monitor-group")
-    public void processFailedMessages(OrderEvent event, @Header(KafkaHeaders.EXCEPTION_MESSAGE) String errorMessage) {
+    @KafkaListener(
+            topics = "ORDER_CREATED.DLT",
+            groupId = "dlt-monitor-group",
+            containerFactory = "simpleFactory"
+    )
+    public void processFailedMessages(
+            OrderEvent event,
+            // FIX: Use the actual DLT header name found in your logs
+            @Header(name = "kafka_dlt-exception-message", required = false) String errorMessage) {
         try {
             log.error("CRITICAL: Message sent to DLT for Order #{} due to: {}",
-                    event.getOrderId(), errorMessage);
-            // This service just logs; do NOT throw any exceptions here
+                    event.getOrderId(), errorMessage != null ? errorMessage : "Unknown Error");
         } catch (Exception e) {
             log.error("DLT Logging failed: {}", e.getMessage());
         }
     }
-
 }

@@ -46,4 +46,14 @@ public class KafkaConsumerConfig {
 
         return factory;
     }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, OrderEvent> simpleFactory(
+            ConsumerFactory<String, OrderEvent> consumerFactory) {
+        ConcurrentKafkaListenerContainerFactory<String, OrderEvent> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory);
+        // We do NOT add any ErrorHandler or Retry logic here.
+        return factory;
+    }
 }
